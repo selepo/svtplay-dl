@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import json
 import re
 from svtplay_dl.log import log
-from svtplay_dl.utils import is_py2, is_py3, decode_html_entities, HTTP
+from svtplay_dl.utils import decode_html_entities, HTTP
 from svtplay_dl.utils.io import StringIO
 from svtplay_dl.output import output
 from requests import __build__ as requests_version
@@ -42,18 +42,18 @@ class subtitle(object):
             data = self.wrst(subdata)
         if self.subtype == "raw":
             data = self.raw(subdata)
-            
+
         if self.subfix:
             self.options.output = self.options.output + self.subfix
-            
+
         if self.options.get_raw_subtitles:
             subdata = self.raw(subdata)
             self.save_file(subdata, self.subtype)
-        
+
         self.save_file(data, "srt")
-        
+
     def save_file(self, data, subtype):
-        if platform.system() == "Windows" and is_py3:
+        if platform.system() == "Windows":
             file_d = output(self.options, subtype, mode="wt", encoding="utf-8")
         else:
             file_d = output(self.options, subtype, mode="wt")
@@ -61,22 +61,16 @@ class subtitle(object):
             return
         file_d.write(data)
         file_d.close()
-        
-        
-    def raw(self, subdata): 
-        if is_py2:
-            data = subdata.text.encode("utf-8")
-        else:
-            data = subdata.text
+
+
+    def raw(self, subdata):
+        data = subdata.text
         return data
-        
+
     def tt(self, subdata):
         i = 1
         data = ""
-        if is_py2:
-            subs = subdata.text.encode("utf8")
-        else:
-            subs = subdata.text
+        subs = subdata.text
 
         subdata = re.sub(' xmlns="[^"]+"', '', subs, count=1)
         tree = ET.XML(subdata)
@@ -104,8 +98,7 @@ class subtitle(object):
                 data = tt_text(node, data)
                 data += "\n"
                 i += 1
-        if is_py2:
-            data = data.encode("utf8")
+
         return data
 
     def json(self, subdata):
@@ -114,18 +107,13 @@ class subtitle(object):
         subs = ""
         for i in data:
             subs += "%s\n%s --> %s\n" % (number, timestr(int(i["startMillis"])), timestr(int(i["endMillis"])))
-            if is_py2:
-                subs += "%s\n\n" % i["text"].encode("utf-8")
-            else:
-                subs += "%s\n\n" % i["text"]
+            subs += "%s\n\n" % i["text"]
             number += 1
 
         return subs
 
     def sami(self, subdata):
         text = subdata.text
-        if is_py2:
-            text = text.encode("utf8")
         text = re.sub(r'&', '&amp;', text)
         tree = ET.fromstring(text)
         subt = tree.find("Font")
@@ -143,17 +131,12 @@ class subtitle(object):
                 if int(n) > 0 and i.text:
                     subs += "%s\n" % decode_html_entities(i.text)
 
-        if is_py2:
-            subs = subs.encode('utf8')
         subs = re.sub('&amp;', r'&', subs)
         return subs
 
     def smi(self, subdata):
         if requests_version < 0x20300:
-            if is_py2:
-                subdata = subdata.content
-            else:
-                subdata = subdata.content.decode("latin")
+            subdata = subdata.content.decode("latin")
         else:
             subdata.encoding = "ISO-8859-1"
             subdata = subdata.text
@@ -183,8 +166,6 @@ class subtitle(object):
                 data = text.group(1)
         recomp = re.compile(r'\r')
         text = bad_char.sub('-', recomp.sub('', subs))
-        if is_py2 and isinstance(text, unicode):
-            return text.encode("utf-8")
         return text
 
     def wrst(self, subdata):
@@ -240,16 +221,14 @@ class subtitle(object):
                         regex1 = '<' + tag + '>'
                         replace = '<font color="' + color + '">'
                         sub = re.sub(regex1, replace, sub)
-                        
+
                     sub = re.sub('</.+>', '</font>',sub)
                 else:
                     sub = re.sub('<[^>]*>', '', i)
-                                        
+
                 srt += sub.strip()
                 srt+="\n"
         srt = decode_html_entities(srt)
-        if is_py2:
-            return srt.encode("utf-8")
         return srt
 
 
