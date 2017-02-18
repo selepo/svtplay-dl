@@ -73,7 +73,8 @@ class HLS(VideoRetriever):
 
         cookies = self.kwargs["cookies"]
         m3u8 = self.http.request("get", self.url, cookies=cookies).text
-        globaldata, files = parsem3u(m3u8)
+        globaldata, files = parsem3u(m3u8, self.url)
+        files = [x[0] for x in files]
         encrypted = False
         key = None
         if "KEY" in globaldata:
@@ -99,14 +100,12 @@ class HLS(VideoRetriever):
         n = 1
         eta = ETA(len(files))
         for i in files:
-            item = _get_full_url(i[0], self.url)
-
             if self.options.output != "-" and not self.options.silent:
                 eta.increment()
                 progressbar(len(files), n, ''.join(['ETA: ', str(eta)]))
                 n += 1
 
-            data = self.http.request("get", item, cookies=cookies)
+            data = self.http.request("get", i, cookies=cookies)
             if data.status_code == 404:
                 break
             data = data.content
@@ -121,7 +120,7 @@ class HLS(VideoRetriever):
             self.finished = True
 
 
-def parsem3u(data):
+def parsem3u(data, url=None):
     if not data.startswith("#EXTM3U"):
         raise ValueError("Does not apprear to be a ext m3u file")
 
@@ -159,7 +158,10 @@ def parsem3u(data):
         elif l[0] == '#':
             pass
         else:
-            files.append((l, streaminfo))
+            if url:
+                files.append((_get_full_url(l, url), streaminfo))
+            else:
+                files.append((l, streaminfo))
             streaminfo = {}
 
     return globdata, files
