@@ -201,8 +201,7 @@ class DASH(VideoRetriever):
 
             if data.status_code == 404:
                 break
-            data = data.content
-            file_d.write(data)
+            file_d.write(data.content)
 
         if self.options.output != "-":
             file_d.close()
