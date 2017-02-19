@@ -6,7 +6,6 @@ import sys
 import os
 import logging
 import copy
-from optparse import OptionParser
 import argparse
 
 from svtplay_dl.error import UIException
