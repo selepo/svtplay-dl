@@ -5,6 +5,10 @@ import copy
 import xml.etree.ElementTree as ET
 import os
 import re
+import queue
+from threading import Thread
+import hashlib
+
 
 
 from svtplay_dl.output import progress_stream, output, ETA, progressbar
@@ -181,7 +185,53 @@ class DASH(VideoRetriever):
             progress_stream.write('\n')
             self.finished = True
 
+    def _grab(self, q, name, cookies=None):
+        while not q.empty():
+            (url, number) = q.get()
+            r = self.http.request("get", url, cookies=cookies)
+            if r.status_code < 400:
+                filename = "{0}-{1}".format(name, number)
+                with open(filename, "wb") as fd:
+                    fd.write(r.content)
+                    fd.close()
+            q.task_done()
+
     def _download2(self, files, audio=False):
+        cookies = self.kwargs["cookies"]
+
+        if audio:
+            file_d = output(copy.copy(self.options), "m4a")
+        else:
+            file_d = output(self.options, self.options.other)
+
+        q = queue.LifoQueue()
+        name = hashlib.sha256(self.options.output.encode('utf-8')).hexdigest()[:8]
+        number = 0
+        for i in files:
+            q.put((i, number))
+            number += 1
+
+        for i in range(10):
+            t1 = Thread(target=self._grab, args=(q, name, cookies))
+            t1.start()
+        q.join()
+        number -= 1
+        for i in range(number):
+            filename = "{0}-{1}".format(name, i)
+            try:
+                with open(filename, "rb") as fd:
+                    data = fd.read()
+                    file_d.write(data)
+                    fd.close()
+            except FileNotFoundError:
+                pass
+        file_d.close()
+        print("Saved")
+        self.finished = True
+
+
+
+    def _download4(self, files, audio=False):
         cookies = self.kwargs["cookies"]
 
         if audio:
