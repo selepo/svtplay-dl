@@ -92,23 +92,23 @@ class HDS(VideoRetriever):
         file_d.write(binascii.a2b_hex(b"00000000000000"))
         file_d.write(base64.b64decode(self.kwargs["metadata"]))
         file_d.write(binascii.a2b_hex(b"00000000"))
-        i = 1
+
         start = antal[1]["first"]
         total = antal[1]["total"]
-        eta = ETA(total)
-        while i <= total:
-            url = "%s/%sSeg1-Frag%s?%s" % (baseurl, self.url, start, querystring)
+        files = []
+        for n in [i for i in range(start, start + total + 1)]:
+            files.append("{0}/{1}Seg1-Frag{2}?{3}".format(baseurl, self.url, n, querystring))
+        eta = ETA(len(files))
+        n = 1
+        for i in files:
             if self.options.output != "-" and not self.options.silent:
-                eta.update(i)
-                progressbar(total, i, ''.join(["ETA: ", str(eta)]))
-            data = self.http.request("get", url, cookies=cookies)
+                eta.update(n)
+                progressbar(len(files), n, ''.join(["ETA: ", str(eta)]))
+            data = self.http.request("get", i, cookies=cookies)
             if data.status_code == 404:
                 break
-            data = data.content
-            number = decode_f4f(i, data)
-            file_d.write(data[number:])
-            i += 1
-            start += 1
+            file_d.write(decode_f4f(n, data.content))
+            n += 1
 
         if self.options.output != "-":
             file_d.close()
@@ -318,5 +318,5 @@ def decode_f4f(fragID, fragData):
         tagLen, = struct.unpack_from(">L", fragData, start)
         tagLen &= 0x00ffffff
         start += tagLen + 11 + 4
-    return start
+    return fragData[start:]
 
