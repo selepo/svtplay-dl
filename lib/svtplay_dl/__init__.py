@@ -361,63 +361,69 @@ def setup_log(silent, verbose=False):
 def main():
     """ Main program """
     parser = argparse.ArgumentParser(prog="svtplay-dl")
-    parser.add_argument('--version', action='version', version='%(prog)s {0}'.format(__version__))
-    parser.add_argument("-o", "--output", metavar="output", help="outputs to the given filename or folder")
-    parser.add_argument("-f", "--force", action="store_true", dest="force", default=False,
+
+    general = parser.add_argument_group()
+
+    general.add_argument('--version', action='version', version='%(prog)s {0}'.format(__version__))
+    general.add_argument("-o", "--output", metavar="output", help="outputs to the given filename or folder")
+    general.add_argument("-f", "--force", action="store_true", dest="force", default=False,
                          help="overwrite if file exists already")
-    parser.add_argument("-r", "--resume", action="store_true", dest="resume", default=False,
+    general.add_argument("-r", "--resume", action="store_true", dest="resume", default=False,
                          help="resume a download (RTMP based ones)")
-    parser.add_argument("-l", "--live", action="store_true", dest="live", default=False,
+    general.add_argument("-l", "--live", action="store_true", dest="live", default=False,
                          help="enable for live streams (RTMP based ones)")
-    parser.add_argument("-s", "--silent", action="store_true", dest="silent", default=False, help="be less verbose")
-    parser.add_argument("--silent-semi", action="store_true", dest="silent_semi", default=False,
+    general.add_argument("-s", "--silent", action="store_true", dest="silent", default=False, help="be less verbose")
+    general.add_argument("--silent-semi", action="store_true", dest="silent_semi", default=False,
                          help="only show a message when the file is downloaded")
-    parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=False,
+    general.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=False,
                          help="explain what is going on")
-    parser.add_argument("-q", "--quality", default=0, metavar="quality",
+    general.add_argument("-q", "--quality", default=0, metavar="quality",
                          help="choose what format to download based on bitrate / video resolution. "
                               "it will download the best format by default")
-    parser.add_argument("-Q", "--flexible-quality", default=0, metavar="amount", dest="flexibleq",
+    general.add_argument("-Q", "--flexible-quality", default=0, metavar="amount", dest="flexibleq",
                          help="allow given quality (as above) to differ by an amount")
-    parser.add_argument("--list-quality", dest="list_quality", action="store_true", default=False,
+    general.add_argument("--list-quality", dest="list_quality", action="store_true", default=False,
                          help="list the quality for a video")
-    parser.add_argument("-S", "--subtitle", action="store_true", dest="subtitle", default=False,
-                         help="download subtitle from the site if available")
-    parser.add_argument("-M", "--merge-subtitle", action="store_true", dest="merge_subtitle", default=False,
-                         help="merge subtitle with video/audio file with corresponding ISO639-3 language code. this invokes --remux automatically. use with -S for external also.")
-    parser.add_argument("--force-subtitle", dest="force_subtitle", default=False, action="store_true",
-                         help="download only subtitle if its used with -S")
-    parser.add_argument("--require-subtitle", dest="require_subtitle", default=False, action="store_true",
-                         help="download only if a subtitle is available")
-    parser.add_argument("--all-subtitles", dest="get_all_subtitles", default=False, action="store_true",
-                         help="Download all available subtitles for the video")
-    parser.add_argument("--raw-subtitles", dest="get_raw_subtitles", default=False, action="store_true",
-                         help="also download the subtitles in their native format")
-    parser.add_argument("--convert-subtitle-colors", dest="convert_subtitle_colors", default=False, action="store_true",
-                         help="converts the color information in subtitles, to <font color=""> tags")
-    parser.add_argument("-u", "--username", default=None, help="username")
-    parser.add_argument("-p", "--password", default=None, help="password")
-    parser.add_argument("-t", "--thumbnail", action="store_true", dest="thumbnail", default=False,
+    general.add_argument("-u", "--username", default=None, help="username")
+    general.add_argument("-p", "--password", default=None, help="password")
+    general.add_argument("-t", "--thumbnail", action="store_true", dest="thumbnail", default=False,
                          help="download thumbnail from the site if available")
-    parser.add_argument("-A", "--all-episodes", action="store_true", dest="all_episodes", default=False,
-                         help="try to download all episodes")
-    parser.add_argument("--all-last", dest="all_last", default=-1, type=int, metavar="NN",
-                         help="get last NN episodes instead of all episodes")
-    parser.add_argument("-P", "--preferred", default=None,metavar="preferred",
+    general.add_argument("-P", "--preferred", default=None,metavar="preferred",
                          help="preferred download method (dash, hls, hds, http or rtmp)")
-    parser.add_argument("--exclude", dest="exclude", default=None, metavar="WORD1,WORD2,...",
+    general.add_argument("--exclude", dest="exclude", default=None, metavar="WORD1,WORD2,...",
                          help="exclude videos with the WORD(s) in the filename. comma separated.")
-    parser.add_argument("-g", "--get-url", action="store_true", dest="get_url", default=False,
+    general.add_argument("-g", "--get-url", action="store_true", dest="get_url", default=False,
                          help="do not download any video, but instead print the URL.")
-    parser.add_argument("--dont-verify-ssl-cert", action="store_false", dest="ssl_verify", default=True,
+    general.add_argument("--dont-verify-ssl-cert", action="store_false", dest="ssl_verify", default=True,
                          help="Don't attempt to verify SSL certificates.")
-    parser.add_argument("--http-header", dest="http_headers", default=None, metavar="header1=value;header2=value2",
+    general.add_argument("--http-header", dest="http_headers", default=None, metavar="header1=value;header2=value2",
                          help="A header to add to each HTTP request.")
-    parser.add_argument("--stream-priority", dest="stream_prio", default=None, metavar="dash,hls,hds,http,rtmp",
+    general.add_argument("--stream-priority", dest="stream_prio", default=None, metavar="dash,hls,hds,http,rtmp",
                          help="If two streams have the same quality, choose the one you prefer")
-    parser.add_argument("--remux", dest="remux", default=False, action="store_true",
+    general.add_argument("--remux", dest="remux", default=False, action="store_true",
                          help="Remux from one container to mp4 using ffmpeg or avconv")
-    parser.add_argument("--include-clips", dest="include_clips", default=False, action="store_true",
+
+    subtitle = parser.add_argument_group("Subtitle")
+    subtitle.add_argument("-S", "--subtitle", action="store_true", dest="subtitle", default=False,
+                         help="download subtitle from the site if available")
+    subtitle.add_argument("-M", "--merge-subtitle", action="store_true", dest="merge_subtitle", default=False,
+                         help="merge subtitle with video/audio file with corresponding ISO639-3 language code. this invokes --remux automatically. use with -S for external also.")
+    subtitle.add_argument("--force-subtitle", dest="force_subtitle", default=False, action="store_true",
+                         help="download only subtitle if its used with -S")
+    subtitle.add_argument("--require-subtitle", dest="require_subtitle", default=False, action="store_true",
+                         help="download only if a subtitle is available")
+    subtitle.add_argument("--all-subtitles", dest="get_all_subtitles", default=False, action="store_true",
+                         help="Download all available subtitles for the video")
+    subtitle.add_argument("--raw-subtitles", dest="get_raw_subtitles", default=False, action="store_true",
+                         help="also download the subtitles in their native format")
+    subtitle.add_argument("--convert-subtitle-colors", dest="convert_subtitle_colors", default=False, action="store_true",
+                         help="converts the color information in subtitles, to <font color=""> tags")
+    alleps = parser.add_argument_group("All")
+    alleps.add_argument("-A", "--all-episodes", action="store_true", dest="all_episodes", default=False,
+                         help="try to download all episodes")
+    alleps.add_argument("--all-last", dest="all_last", default=-1, type=int, metavar="NN",
+                         help="get last NN episodes instead of all episodes")
+    alleps.add_argument("--include-clips", dest="include_clips", default=False, action="store_true",
                          help="include clips from websites when using -A")
     parser.add_argument('urls', nargs="*")
 
