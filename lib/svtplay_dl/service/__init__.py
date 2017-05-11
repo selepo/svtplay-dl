@@ -64,8 +64,6 @@ class Service(object):
     def exclude2(self, filename):
         if self.options.exclude:
             for i in self.options.exclude:
-                if is_py2:
-                    i = i.decode("utf-8")
                 if i in filename:
                     return True
         return False
