@@ -44,7 +44,6 @@ class Mtvnn(Service, OpenGraphThumbMixin):
         contenturl = mediagen.find("{http://search.yahoo.com/mrss/}content").attrib["url"]
         filename = os.path.basename(contenturl)
         data = self.http.request("get", "http://videos.mtvnn.com/api/v2/%s.js?video_format=hls" % filename).text
-        dataj = json.loads(data)
         content = self.http.request("get", contenturl).content
         xml = ET.XML(content)
         ss = xml.find("video").find("item")
@@ -55,7 +54,7 @@ class Mtvnn(Service, OpenGraphThumbMixin):
 
         for i in sa:
             yield RTMP(self.options, i.find("src").text, i.attrib["bitrate"])
-        streams = hlsparse(self.options, self.http.request("get", dataj["src"]), dataj["src"])
+        streams = hlsparse(self.options, self.http.request("get", i.find("src").text), i.find("src").text)
         if streams:
             for n in list(streams.keys()):
                 yield streams[n]
